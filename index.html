@@ -7,15 +7,18 @@
   <style>
     :root{
       --accent:#3b82f6;
-      --text:#111827;
-      --muted:#374151;
-      --card:#ffffff;
-      --stroke:rgba(17,24,39,.10);
-      --track:rgba(17,24,39,.10);
+      --text:#0b1220;
+      --muted:#22314a;
+      --stroke:rgba(11,18,32,.14);
+      --track:rgba(11,18,32,.16);
       --shadow:0 14px 30px rgba(0,0,0,.18);
       --radius:14px;
       --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+
+      /* translucent card, tinted by month */
+      --card: color-mix(in srgb, var(--accent) 14%, rgba(255,255,255,.86));
     }
+
     *{box-sizing:border-box}
     body{
       margin:0;
@@ -27,41 +30,30 @@
       font-family:var(--font);
       color:var(--text);
     }
+
     .card{
-      width:min(520px, 92vw);
-      padding:14px 14px 12px;
+      width:min(360px, 92vw);
+      padding:10px 10px 10px;
+      border-radius:var(--radius);
       background:var(--card);
       border:1px solid var(--stroke);
-      border-radius:var(--radius);
       box-shadow:var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
-    .row{
+    .top{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
     }
 
-    .month{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-      min-width:0;
-    }
     .monthTitle{
-      font-size:14px;
-      font-weight:700;
+      font-size:13px;
+      font-weight:800;
       letter-spacing:.2px;
-      line-height:1.1;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .monthRange{
-      font-size:11px;
-      color:var(--muted);
-      line-height:1.2;
+      line-height:1;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -73,71 +65,80 @@
       gap:8px;
       flex:0 0 auto;
     }
+
     .iconBtn{
-      width:30px;
-      height:30px;
-      border-radius:10px;
-      border:1px solid var(--stroke);
-      background:#fff;
+      width:26px;
+      height:26px;
+      border-radius:9px;
+      border:1px solid rgba(11,18,32,.16);
+      background:rgba(255,255,255,.55);
       cursor:pointer;
       display:grid;
       place-items:center;
-      transition:transform .08s ease, background .15s ease, border-color .15s ease;
       user-select:none;
+      transition:transform .08s ease, background .15s ease, opacity .15s ease;
+      font-weight:900;
+      color:rgba(11,18,32,.86);
     }
-    .iconBtn:hover{ background:rgba(17,24,39,.04); border-color:rgba(17,24,39,.18); }
+    .iconBtn:hover{ background:rgba(255,255,255,.72); }
     .iconBtn:active{ transform:scale(.98); }
+    .iconBtn[disabled]{
+      opacity:.35;
+      cursor:not-allowed;
+      transform:none;
+    }
 
     .pin{
       display:inline-flex;
       align-items:center;
-      gap:8px;
-      padding:7px 10px;
+      gap:7px;
+      padding:6px 9px;
       border-radius:999px;
-      border:1px solid var(--stroke);
-      background:#fff;
-      font-size:12px;
-      color:var(--text);
+      border:1px solid rgba(11,18,32,.16);
+      background:rgba(255,255,255,.55);
+      font-size:11px;
+      font-weight:800;
+      color:rgba(11,18,32,.90);
       cursor:pointer;
       user-select:none;
     }
     .pin input{ accent-color:var(--accent); }
 
     .numbers{
-      margin-top:10px;
+      margin-top:8px;
       display:flex;
       align-items:baseline;
       justify-content:space-between;
       gap:10px;
     }
-    .big{
-      font-size:22px;
-      font-weight:800;
-      letter-spacing:.2px;
+    .percent{
+      font-size:20px;
+      font-weight:900;
       line-height:1;
-      color:var(--text);
+      color:rgba(11,18,32,.95);
     }
-    .small{
+    .fraction{
       font-size:12px;
-      font-weight:700;
-      color:var(--muted);
+      font-weight:800;
       line-height:1;
+      color:rgba(11,18,32,.80);
     }
 
     .bar{
-      margin-top:8px;
-      height:10px;
+      margin-top:7px;
+      height:9px;
       border-radius:999px;
       background:var(--track);
       overflow:hidden;
-      position:relative;
-      border:1px solid rgba(17,24,39,.06);
+      border:1px solid rgba(11,18,32,.10);
     }
     .fill{
       height:100%;
       width:0%;
       border-radius:999px;
-      background:linear-gradient(90deg, rgba(255,255,255,.25), rgba(255,255,255,0)), var(--accent);
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.28), rgba(255,255,255,0)),
+        var(--accent);
       transition:width .45s ease;
     }
   </style>
@@ -145,17 +146,14 @@
 
 <body>
   <div class="card" role="group" aria-label="Month progress widget">
-    <div class="row">
-      <div class="month">
-        <div class="monthTitle" id="monthName">Month</div>
-        <div class="monthRange" id="rangeText">—</div>
-      </div>
+    <div class="top">
+      <div class="monthTitle" id="monthName">Month</div>
 
       <div class="controls">
         <button class="iconBtn" id="prevBtn" aria-label="Previous month" title="Previous month">‹</button>
         <button class="iconBtn" id="nextBtn" aria-label="Next month" title="Next month">›</button>
 
-        <label class="pin" title="Keeps selected month after refresh">
+        <label class="pin" title="Locks month selection until unpinned">
           <input id="pinToggle" type="checkbox" />
           <span>Pin</span>
         </label>
@@ -163,8 +161,8 @@
     </div>
 
     <div class="numbers">
-      <div class="big" id="percentText">0%</div>
-      <div class="small" id="fractionText">0/0</div>
+      <div class="percent" id="percentText">0%</div>
+      <div class="fraction" id="fractionText">0/0</div>
     </div>
 
     <div class="bar" aria-label="Month progress">
@@ -173,26 +171,28 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "month_progress_widget_v2";
+    const STORAGE_KEY = "month_progress_widget_v3";
     const now = new Date();
 
+    // More authentic month associations (modern, widely recognizable)
+    // winter: cold steel / ice, spring: fresh green & blossom, summer: sun & sea,
+    // autumn: harvest amber / rust / wine, december: evergreen
     const MONTH_META = [
-      { name: "January",   color: "#86b7ff" },
-      { name: "February",  color: "#7f7cff" },
-      { name: "March",     color: "#4fd1c5" },
-      { name: "April",     color: "#4caf50" },
-      { name: "May",       color: "#7ad957" },
-      { name: "June",      color: "#f6c34a" },
-      { name: "July",      color: "#ffb300" },
-      { name: "August",    color: "#ff8f3d" },
-      { name: "September", color: "#4f7cff" },
-      { name: "October",   color: "#ff6a2a" },
-      { name: "November",  color: "#7a1f3d" },
-      { name: "December",  color: "#0f7a5a" }
+      { name: "January",   color: "#3B82F6" }, // crisp winter blue
+      { name: "February",  color: "#6366F1" }, // deep indigo (late winter)
+      { name: "March",     color: "#22C55E" }, // first green
+      { name: "April",     color: "#34D399" }, // mint bloom
+      { name: "May",       color: "#16A34A" }, // full green
+      { name: "June",      color: "#F59E0B" }, // golden start of summer
+      { name: "July",      color: "#F97316" }, // hot sun
+      { name: "August",    color: "#0EA5E9" }, // sea / vacation
+      { name: "September", color: "#EAB308" }, // harvest gold
+      { name: "October",   color: "#EA580C" }, // pumpkin / rust
+      { name: "November",  color: "#7C2D12" }, // deep cocoa / late autumn
+      { name: "December",  color: "#065F46" }  // evergreen
     ];
 
     const monthNameEl = document.getElementById("monthName");
-    const rangeTextEl = document.getElementById("rangeText");
     const percentTextEl = document.getElementById("percentText");
     const fractionTextEl = document.getElementById("fractionText");
     const fillEl = document.getElementById("fill");
@@ -218,6 +218,7 @@
         return { pinned:false, monthIndex: now.getMonth() };
       }
     }
+
     function saveState(state){
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         pinned: !!state.pinned,
@@ -225,19 +226,11 @@
       }));
     }
 
-    function formatRange(year, monthIndex){
-      const start = new Date(year, monthIndex, 1);
-      const end = new Date(year, monthIndex, daysInMonth(year, monthIndex));
-      const fmt = (d) => d.toLocaleDateString("en-GB", { day:"2-digit", month:"2-digit", year:"numeric" });
-      return `${fmt(start)} - ${fmt(end)}`;
-    }
-
     function computeProgress(year, monthIndex){
       const total = daysInMonth(year, monthIndex);
       const today = new Date();
       const isCurrentMonth = (today.getFullYear() === year && today.getMonth() === monthIndex);
 
-      // For non-current months: past = 100%, future = 0%
       if(!isCurrentMonth){
         const ref = new Date(year, monthIndex, 1).getTime();
         const cur = new Date(today.getFullYear(), today.getMonth(), 1).getTime();
@@ -246,57 +239,63 @@
       }
 
       const day = today.getDate();
-      const percent = Math.round((day / total) * 1000) / 10; // 1 decimal
+      const percent = Math.round((day / total) * 1000) / 10;
       return { day, total, percent };
     }
 
-    // Local runtime state (for browsing when not pinned)
-    const state = loadState();
-    let viewMonthIndex = state.pinned ? state.monthIndex : now.getMonth();
+    function setControlsLocked(locked){
+      prevBtn.disabled = locked;
+      nextBtn.disabled = locked;
+    }
 
     function applyMonth(monthIndex){
       const year = now.getFullYear();
       const meta = MONTH_META[monthIndex];
+
       document.documentElement.style.setProperty("--accent", meta.color);
 
       monthNameEl.textContent = `${meta.name} ${year}`;
-      rangeTextEl.textContent = formatRange(year, monthIndex);
 
       const { day, total, percent } = computeProgress(year, monthIndex);
-
       percentTextEl.textContent = `${percent}%`;
       fractionTextEl.textContent = `${day}/${total}`;
       fillEl.style.width = `${clamp(percent, 0, 100)}%`;
     }
 
     // Init
+    const state = loadState();
     pinToggleEl.checked = state.pinned;
-    applyMonth(viewMonthIndex);
 
-    // Arrows: browse months
+    // If pinned -> show pinned month, else show current month
+    let viewMonthIndex = state.pinned ? state.monthIndex : now.getMonth();
+
+    applyMonth(viewMonthIndex);
+    setControlsLocked(state.pinned);
+
     function shiftMonth(delta){
+      // If pinned, do nothing
+      if(pinToggleEl.checked) return;
+
       viewMonthIndex = (viewMonthIndex + delta + 12) % 12;
       applyMonth(viewMonthIndex);
-
-      // Only persist when pinned
-      if(pinToggleEl.checked){
-        saveState({ pinned:true, monthIndex:viewMonthIndex });
-      }
     }
 
     prevBtn.addEventListener("click", () => shiftMonth(-1));
     nextBtn.addEventListener("click", () => shiftMonth(1));
 
-    // Pin toggle
     pinToggleEl.addEventListener("change", () => {
       const pinned = pinToggleEl.checked;
 
       if(pinned){
-        // Pin whatever is currently viewed
+        // lock current viewed month and persist it
         saveState({ pinned:true, monthIndex:viewMonthIndex });
+        setControlsLocked(true);
       }else{
-        // Unpin -> always snap back to current month on refresh
+        // unlock and snap back to current month as the default behavior
         saveState({ pinned:false, monthIndex: now.getMonth() });
+        viewMonthIndex = now.getMonth();
+        applyMonth(viewMonthIndex);
+        setControlsLocked(false);
       }
     });
   </script>
