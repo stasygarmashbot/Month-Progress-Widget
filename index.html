@@ -1,20 +1,19 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Month Progress Widget</title>
+  <title>Month Progress</title>
   <style>
     :root{
-      --accent:#4caf50;
-      --bg:transparent;
-      --card-bg:rgba(20,24,36,.92);
-      --stroke:rgba(255,255,255,.12);
-      --text:#e8ecf3;
-      --muted:#aab3c5;
-      --track:rgba(255,255,255,.10);
-      --radius:16px;
-      --shadow:0 12px 28px rgba(0,0,0,.35);
+      --accent:#3b82f6;
+      --text:#111827;
+      --muted:#374151;
+      --card:#ffffff;
+      --stroke:rgba(17,24,39,.10);
+      --track:rgba(17,24,39,.10);
+      --shadow:0 14px 30px rgba(0,0,0,.18);
+      --radius:14px;
       --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
     }
     *{box-sizing:border-box}
@@ -24,212 +23,182 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      background:var(--bg);
+      background:transparent;
       font-family:var(--font);
       color:var(--text);
     }
     .card{
       width:min(520px, 92vw);
-      border-radius:var(--radius);
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      padding:14px 14px 12px;
+      background:var(--card);
       border:1px solid var(--stroke);
+      border-radius:var(--radius);
       box-shadow:var(--shadow);
-      padding:18px 18px 16px;
-      backdrop-filter: blur(10px);
     }
-    .top{
+
+    .row{
       display:flex;
-      align-items:flex-start;
+      align-items:center;
       justify-content:space-between;
-      gap:12px;
-      margin-bottom:14px;
+      gap:10px;
     }
-    .title{
+
+    .month{
       display:flex;
       flex-direction:column;
       gap:2px;
       min-width:0;
     }
-    .title h1{
-      font-size:16px;
-      margin:0;
+    .monthTitle{
+      font-size:14px;
+      font-weight:700;
       letter-spacing:.2px;
+      line-height:1.1;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
-    .title .sub{
-      font-size:12px;
+    .monthRange{
+      font-size:11px;
       color:var(--muted);
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
+      line-height:1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
+
     .controls{
       display:flex;
-      gap:10px;
       align-items:center;
-      flex-wrap:wrap;
-      justify-content:flex-end;
+      gap:8px;
+      flex:0 0 auto;
     }
-    .chip{
+    .iconBtn{
+      width:30px;
+      height:30px;
+      border-radius:10px;
+      border:1px solid var(--stroke);
+      background:#fff;
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+      transition:transform .08s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+    }
+    .iconBtn:hover{ background:rgba(17,24,39,.04); border-color:rgba(17,24,39,.18); }
+    .iconBtn:active{ transform:scale(.98); }
+
+    .pin{
       display:inline-flex;
       align-items:center;
       gap:8px;
-      padding:8px 10px;
+      padding:7px 10px;
       border-radius:999px;
       border:1px solid var(--stroke);
-      background:rgba(255,255,255,.05);
-      color:var(--text);
+      background:#fff;
       font-size:12px;
+      color:var(--text);
       cursor:pointer;
       user-select:none;
-      transition:transform .08s ease, background .15s ease, border-color .15s ease;
     }
-    .chip:active{transform:scale(.98)}
-    .chip:hover{
-      background:rgba(255,255,255,.08);
-      border-color:rgba(255,255,255,.18);
+    .pin input{ accent-color:var(--accent); }
+
+    .numbers{
+      margin-top:10px;
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
     }
-    .chip input{accent-color:var(--accent)}
-    .selectWrap{
-      position:relative;
-      display:inline-block;
-    }
-    select{
-      appearance:none;
-      background:rgba(255,255,255,.05);
+    .big{
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:.2px;
+      line-height:1;
       color:var(--text);
-      border:1px solid var(--stroke);
-      border-radius:12px;
-      padding:8px 34px 8px 12px;
-      font-size:12px;
-      outline:none;
-      cursor:pointer;
     }
-    .selectWrap:after{
-      content:"▾";
-      position:absolute;
-      right:12px;
-      top:50%;
-      transform:translateY(-50%);
-      color:rgba(232,236,243,.8);
-      pointer-events:none;
+    .small{
       font-size:12px;
+      font-weight:700;
+      color:var(--muted);
+      line-height:1;
     }
+
     .bar{
-      height:14px;
+      margin-top:8px;
+      height:10px;
       border-radius:999px;
       background:var(--track);
       overflow:hidden;
       position:relative;
+      border:1px solid rgba(17,24,39,.06);
     }
     .fill{
       height:100%;
       width:0%;
-      background:linear-gradient(90deg, rgba(255,255,255,.10), rgba(255,255,255,.00)), var(--accent);
       border-radius:999px;
+      background:linear-gradient(90deg, rgba(255,255,255,.25), rgba(255,255,255,0)), var(--accent);
       transition:width .45s ease;
-      box-shadow: 0 0 0 1px rgba(255,255,255,.06) inset;
-    }
-    .bottom{
-      margin-top:12px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      color:var(--muted);
-      font-size:12px;
-      flex-wrap:wrap;
-    }
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--stroke);
-      background:rgba(255,255,255,.04);
-    }
-    .dot{
-      width:10px;height:10px;border-radius:50%;
-      background:var(--accent);
-      box-shadow:0 0 0 3px rgba(255,255,255,.06);
     }
   </style>
 </head>
 
 <body>
   <div class="card" role="group" aria-label="Month progress widget">
-    <div class="top">
-      <div class="title">
-        <h1 id="monthName">Месяц</h1>
-        <div class="sub">
-          <span id="rangeText">—</span>
-          <span id="daysText">—</span>
-        </div>
+    <div class="row">
+      <div class="month">
+        <div class="monthTitle" id="monthName">Month</div>
+        <div class="monthRange" id="rangeText">—</div>
       </div>
 
       <div class="controls">
-        <label class="chip" title="Сохраняет выбранный месяц после обновления">
-          <input id="pinToggle" type="checkbox" />
-          <span>Фиксировать</span>
-        </label>
+        <button class="iconBtn" id="prevBtn" aria-label="Previous month" title="Previous month">‹</button>
+        <button class="iconBtn" id="nextBtn" aria-label="Next month" title="Next month">›</button>
 
-        <span class="selectWrap" title="Выбор месяца работает только при фиксации">
-          <select id="monthSelect" aria-label="Выбор месяца"></select>
-        </span>
+        <label class="pin" title="Keeps selected month after refresh">
+          <input id="pinToggle" type="checkbox" />
+          <span>Pin</span>
+        </label>
       </div>
     </div>
 
-    <div class="bar" aria-label="Прогресс месяца">
-      <div class="fill" id="fill"></div>
+    <div class="numbers">
+      <div class="big" id="percentText">0%</div>
+      <div class="small" id="fractionText">0/0</div>
     </div>
 
-    <div class="bottom">
-      <span class="badge" title="Тема и цвет месяца">
-        <span class="dot" id="dot"></span>
-        <span id="themeText">—</span>
-      </span>
-      <span id="progressText">—</span>
+    <div class="bar" aria-label="Month progress">
+      <div class="fill" id="fill"></div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = "month_progress_widget_v1";
+    const STORAGE_KEY = "month_progress_widget_v2";
     const now = new Date();
 
     const MONTH_META = [
-      { name: "Январь",  theme: "ледяной старт",       color: "#86b7ff" },
-      { name: "Февраль", theme: "холодный неон",       color: "#7f7cff" },
-      { name: "Март",    theme: "оттепель",            color: "#4fd1c5" },
-      { name: "Апрель",  theme: "цветение",            color: "#4caf50" },
-      { name: "Май",     theme: "свежая зелень",       color: "#7ad957" },
-      { name: "Июнь",    theme: "длинный день",        color: "#f6c34a" },
-      { name: "Июль",    theme: "солнце",              color: "#ffb300" },
-      { name: "Август",  theme: "золотой жар",         color: "#ff8f3d" },
-      { name: "Сентябрь",theme: "фокус и планы",       color: "#4f7cff" },
-      { name: "Октябрь", theme: "тыквенный сезон",     color: "#ff6a2a" },
-      { name: "Ноябрь",  theme: "бордовый туман",      color: "#7a1f3d" },
-      { name: "Декабрь", theme: "глубокое рождество",  color: "#0f7a5a" }
+      { name: "January",   color: "#86b7ff" },
+      { name: "February",  color: "#7f7cff" },
+      { name: "March",     color: "#4fd1c5" },
+      { name: "April",     color: "#4caf50" },
+      { name: "May",       color: "#7ad957" },
+      { name: "June",      color: "#f6c34a" },
+      { name: "July",      color: "#ffb300" },
+      { name: "August",    color: "#ff8f3d" },
+      { name: "September", color: "#4f7cff" },
+      { name: "October",   color: "#ff6a2a" },
+      { name: "November",  color: "#7a1f3d" },
+      { name: "December",  color: "#0f7a5a" }
     ];
 
     const monthNameEl = document.getElementById("monthName");
     const rangeTextEl = document.getElementById("rangeText");
-    const daysTextEl = document.getElementById("daysText");
+    const percentTextEl = document.getElementById("percentText");
+    const fractionTextEl = document.getElementById("fractionText");
     const fillEl = document.getElementById("fill");
-    const progressTextEl = document.getElementById("progressText");
-    const themeTextEl = document.getElementById("themeText");
-    const dotEl = document.getElementById("dot");
     const pinToggleEl = document.getElementById("pinToggle");
-    const monthSelectEl = document.getElementById("monthSelect");
-
-    MONTH_META.forEach((m, idx) => {
-      const opt = document.createElement("option");
-      opt.value = String(idx);
-      opt.textContent = m.name;
-      monthSelectEl.appendChild(opt);
-    });
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
 
     function daysInMonth(year, monthIndex){
       return new Date(year, monthIndex + 1, 0).getDate();
@@ -245,11 +214,10 @@
           pinned: !!parsed.pinned,
           monthIndex: Number.isFinite(parsed.monthIndex) ? clamp(parsed.monthIndex, 0, 11) : now.getMonth()
         };
-      }catch(e){
+      }catch{
         return { pinned:false, monthIndex: now.getMonth() };
       }
     }
-
     function saveState(state){
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         pinned: !!state.pinned,
@@ -257,11 +225,19 @@
       }));
     }
 
+    function formatRange(year, monthIndex){
+      const start = new Date(year, monthIndex, 1);
+      const end = new Date(year, monthIndex, daysInMonth(year, monthIndex));
+      const fmt = (d) => d.toLocaleDateString("en-GB", { day:"2-digit", month:"2-digit", year:"numeric" });
+      return `${fmt(start)} - ${fmt(end)}`;
+    }
+
     function computeProgress(year, monthIndex){
       const total = daysInMonth(year, monthIndex);
       const today = new Date();
       const isCurrentMonth = (today.getFullYear() === year && today.getMonth() === monthIndex);
 
+      // For non-current months: past = 100%, future = 0%
       if(!isCurrentMonth){
         const ref = new Date(year, monthIndex, 1).getTime();
         const cur = new Date(today.getFullYear(), today.getMonth(), 1).getTime();
@@ -270,61 +246,58 @@
       }
 
       const day = today.getDate();
-      const percent = Math.round((day / total) * 1000) / 10;
+      const percent = Math.round((day / total) * 1000) / 10; // 1 decimal
       return { day, total, percent };
     }
 
-    function formatDateRange(year, monthIndex){
-      const start = new Date(year, monthIndex, 1);
-      const end = new Date(year, monthIndex, daysInMonth(year, monthIndex));
-      const fmt = (d) => d.toLocaleDateString("ru-RU", { day:"2-digit", month:"2-digit", year:"numeric" });
-      return `${fmt(start)} - ${fmt(end)}`;
-    }
+    // Local runtime state (for browsing when not pinned)
+    const state = loadState();
+    let viewMonthIndex = state.pinned ? state.monthIndex : now.getMonth();
 
-    function applyMonth(monthIndex, pinned){
+    function applyMonth(monthIndex){
       const year = now.getFullYear();
       const meta = MONTH_META[monthIndex];
-
       document.documentElement.style.setProperty("--accent", meta.color);
 
       monthNameEl.textContent = `${meta.name} ${year}`;
-      rangeTextEl.textContent = formatDateRange(year, monthIndex);
+      rangeTextEl.textContent = formatRange(year, monthIndex);
 
       const { day, total, percent } = computeProgress(year, monthIndex);
 
-      daysTextEl.textContent = pinned ? `день: ${day} из ${total}` : `сегодня: ${day} из ${total}`;
+      percentTextEl.textContent = `${percent}%`;
+      fractionTextEl.textContent = `${day}/${total}`;
       fillEl.style.width = `${clamp(percent, 0, 100)}%`;
-
-      const status = percent === 100 ? "закрыт" : (percent === 0 ? "еще не начался" : "в процессе");
-      progressTextEl.textContent = `прогресс: ${percent}% , статус: ${status}`;
-
-      themeTextEl.textContent = meta.theme;
-      dotEl.style.background = meta.color;
-
-      monthSelectEl.disabled = !pinned;
-      monthSelectEl.style.opacity = pinned ? "1" : ".55";
-      monthSelectEl.style.cursor = pinned ? "pointer" : "not-allowed";
     }
 
-    const state = loadState();
+    // Init
     pinToggleEl.checked = state.pinned;
-    monthSelectEl.value = String(state.monthIndex);
+    applyMonth(viewMonthIndex);
 
-    const initialMonth = state.pinned ? state.monthIndex : now.getMonth();
-    applyMonth(initialMonth, state.pinned);
+    // Arrows: browse months
+    function shiftMonth(delta){
+      viewMonthIndex = (viewMonthIndex + delta + 12) % 12;
+      applyMonth(viewMonthIndex);
 
+      // Only persist when pinned
+      if(pinToggleEl.checked){
+        saveState({ pinned:true, monthIndex:viewMonthIndex });
+      }
+    }
+
+    prevBtn.addEventListener("click", () => shiftMonth(-1));
+    nextBtn.addEventListener("click", () => shiftMonth(1));
+
+    // Pin toggle
     pinToggleEl.addEventListener("change", () => {
       const pinned = pinToggleEl.checked;
-      const monthIndex = pinned ? Number(monthSelectEl.value) : now.getMonth();
-      saveState({ pinned, monthIndex: pinned ? monthIndex : now.getMonth() });
-      applyMonth(monthIndex, pinned);
-    });
 
-    monthSelectEl.addEventListener("change", () => {
-      if(!pinToggleEl.checked) return;
-      const monthIndex = Number(monthSelectEl.value);
-      saveState({ pinned:true, monthIndex });
-      applyMonth(monthIndex, true);
+      if(pinned){
+        // Pin whatever is currently viewed
+        saveState({ pinned:true, monthIndex:viewMonthIndex });
+      }else{
+        // Unpin -> always snap back to current month on refresh
+        saveState({ pinned:false, monthIndex: now.getMonth() });
+      }
     });
   </script>
 </body>
